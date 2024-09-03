@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Timer - TUT - Interval Training</title>
+	<style>
+		body {
+			background-color: rgb(43, 58, 56);
+		}
+		h1 {
+			background-color: rgb(57, 90, 86);
+		}
+		#cajas {
+			display : flex;
+			width: 100%;
+			height : 92px;
+			background-color: rgb(255, 240, 206); 
+			align-items: center;
+			justify-content: center;
+			margin-top: 30px;
+		}
+		#marcador{
+			display : flex;
+			flex-direction: column;
+			background-color: rgb(255, 240, 206); 
+			align-items: center;
+			margin-top: 5%;
+			margin-left: 45%;
+			width: 150px;
+			height : 200px;
+		}
+		#marcador_intervalos{
+			display : flex;
+			font-size: 60px;
+			text-align: center;
+			width: 100%;
+			height: 30%;
+			justify-content: center;
+
+			background-color: rgb(253, 225, 160);
+		}
+		#marcador_central{
+			display : flex;
+			background-color: rgb(252, 208, 108);
+			font-size: 80px;
+			width: 100%;
+			height: 70%;
+			justify-content: center;
+			align-items: center;
+
+		}
+		.caja {
+			height : 90px;
+		}
+		.anicrece{
+			animation-name: crece;
+			animation-duration: 1s;
+			animation-fill-mode: forwards;
+		}
+		.anidecrece{
+			animation-name: decrece;
+			animation-duration: 1s;
+			animation-fill-mode: forwards;
+		}
+		@keyframes crece {
+		   100%{
+				border-right: solid black;
+				border-bottom: solid black;
+				border-top: solid black;;
+				border-width: 5px;
+				height: 130px;
+				opacity: 1;
+			}
+		}
+		@keyframes decrece {
+			100% {
+				border-right: none;
+				border-bottom: none;
+				border-top: none;;
+				border-width: none;
+				border-left: 1px solid black;
+				height: 90px;
+				opacity: 0.7;
+			}
+		}	
+	</style>
+    </head>
+    <body>
+        <h1 id="muestra">Texto de prueba</h1>
+        <input id="entrada" placeholder="introduzca valores" type="text" autofocus>
+        <button id="enviar" onclick="f_enviar()">Enviar</button>
+        <div id="cajas">
+
+        </div>
+        <div id="marcador">
+            <div id="marcador_intervalos">0/0</div>
+            <div id="marcador_central">--</div>
+        </div>
+        <button id="empezar" onclick="f_empezar()" disabled="true">Empezar</button>
+        <button id="pausar" onclick="f_pausar()"disabled="true">Pausar</button>
+        <button id="terminar" onclick="f_terminar()"disabled="true">Terminar</button>
+    </body>
+    <script>
+		class pareja {
+			constructor(n, m) {
+				this.valor = n;
+				this.tipo = m;
+			}
+		}
+		class intervalo {
+			constructor(cad) {
+				this.t_previo = 0;
+				this.reps = 1;
+				this.cadena = cad;
+				this.lectura = [];
+
+			}
+		}
+
+		let pausado = false,
+			terminar = false;
+
+		document.querySelector('#entrada').addEventListener('keyup', function(e) {
+			let keycode = e.keyCode || e.which;
+			if (keycode == 13) {
+			  f_enviar();
+			}
+		  });
+
+		function limpiar_cajas() {
+			let div = document.getElementById("cajas");
+			while (div.hasChildNodes()){
+					div.removeChild(div.lastChild);
+				}
+		}
+
+		function representar(parejas) {
+			let t_total = 0;
+			let aux = 0;
+			parejas.forEach((par) => {
+				t_total += par.valor;
+				});
+			console.log ("el t_total es : " + t_total)
+			for (let i=0;i<parejas.length;i++)
+			{
+				let caja = document.createElement("div");
+				caja.id = `caja${i}`;
+				caja.className = "caja";
+				caja.style.borderLeft = "1px black solid";
+				caja.style.opacity = "0.9";
+				let valor = parseFloat((parejas[i].valor*100)/t_total);
+				aux += valor;
+				caja.style.width = `${valor}%`;        
+				if (parejas[i].tipo=="d")
+					caja.style.backgroundColor = "#FF4500";
+				else if (parejas[i].tipo=="a")
+					caja.style.backgroundColor = "#7CFC00";
+				else
+					caja.style.backgroundColor = "rgb(255, 238, 0)";
+
+				document.getElementById("cajas").appendChild(caja);
+			}
+			console.log("la suma de los valores es : "+aux+"%");
+			caja = document.getElementById("caja"+(parejas.length-1));
+			caja.style.borderRight = "1px black solid";
+			caja = document.getElementById("cajas");
+			caja.style.backgroundColor = "black";
+		}
+
+		function juntar(intervalos){
+			let aux = [];
+			intervalos.forEach (dato => {
+				let cad = dato.lectura.slice();
+				let aux2 = []
+				for (i=0;i<dato.reps;i++){
+					aux2 = aux2.concat(cad);
+				}
+				if (aux2[aux2.length-1].tipo == "d")
+					aux2.pop();
+				cad = aux2.slice();
+				if (dato.t_previo>0){
+					let par = new pareja (dato.t_previo, "t");
+					cad.unshift(par);
+				}
+				aux = aux.concat(cad);
+			});
+			console.log ("--- Después de Juntar ---");
+			aux.forEach(par =>{
+				console.log("valor : " + par.valor + "   tipo : " + par.tipo);
+			});
+			return (aux);
+		}
+
+		function limpiar_datos(datos){
+			datos.forEach(dato => {
+				let par = new pareja();
+				par = dato.lectura[0];
+				if ( (dato.lectura.length>1) && (par.tipo == "+") ){
+					if (par.valor > 0)
+						dato.t_previo = par.valor;
+					dato.lectura.shift();
+				}
+				par = dato.lectura[0];
+				if ( (dato.lectura.length>1) && ( (par.tipo == "*") || (par.tipo == "x") ) ) {
+					if (par.valor > 0)
+						dato.reps = par.valor;
+					dato.lectura.shift();
+				}
+				par = dato.lectura[0];
+				while ( (dato.lectura.length>0) && (par.tipo == "d") ){
+					dato.lectura.shift();
+					par = dato.lectura[0];
+				}
+				let anterior = "";
+				let aux = [];
+				dato.lectura.forEach(pare => {
+					if ( ( pare.tipo == "a") || (pare.tipo == "d") ){
+						if ( !( (anterior == "d") && (pare.tipo == "d") ) ){
+							aux.push(pare);
+							anterior = pare.tipo;
+						}
+					}
+				});
+				dato.lectura = aux.slice();
+			});
+			return(datos);
+		}
+
+		function entrada_con_barras (cadena){
+			let aux = cadena.replaceAll("//","/");
+			let nums = aux.split("/");
+			let tipos = ["a"];
+			aux = cadena.replaceAll("//","%");
+			aux = aux.substring(nums[0].length);
+			for (let i=1; i<nums.length;i++){
+				if (aux[0] == "/"){
+					tipos.push("a");
+					aux = aux.substring(nums[i].length+1);
+				}else if (aux[0] == "%"){
+					tipos.push("d");
+					aux = aux.substring(nums[i].length+1);
+				}else {
+					return cadena;
+				}
+			}
+			aux = "";
+			if (nums.length == tipos.length){
+				for (let i=0;i<nums.length;i++){
+					aux = aux + nums[i] + tipos[i];
+				}
+				return aux;
+			}
+			else{
+				return cadena;
+			}
+		}
+
+		function cargar_datos(cad) {
+			let acadenas = cad.split("-");
+			let intervalos = [];
+			acadenas.forEach(cadena => {
+				cadena = entrada_con_barras(cadena);
+				let chars = cadena.split("");
+				let int = new intervalo (cadena);
+				let n_char = "";
+				chars.forEach(c => {
+					let num = parseInt(c);
+					if ( !( ( isNaN(num) ) || (num<0) ) )
+						n_char = n_char + c;
+					else if (n_char != ""){
+						let par = new pareja (parseInt(n_char), c);
+						int.lectura.push(par);
+						n_char = "";
+					}
+				});
+				if (int.lectura.length>0)
+					intervalos.push(int);
+			});
+			return intervalos; 
+		}
+
+		function cadena_leida (datos){
+			let aux = "";
+			datos.forEach(dato => {
+				if (dato.t_previo>0)
+					aux = aux + dato.t_previo + "+";
+				if (dato.reps>1)
+					aux = aux + dato.reps + "*";
+				dato.lectura.forEach(par => {
+					aux = aux + par.valor + par.tipo;
+				});
+			});
+			return(aux);
+		}
+
+		function f_enviar() {
+			const heading = document.querySelector('h1');
+			const entrada = document.querySelector('#entrada').value.toLowerCase();
+			heading.innerHTML = "La entrada es: " + entrada;
+			
+			let cadena = entrada.replaceAll(" ","");
+			let datos=[];
+			limpiar_cajas();
+			cadena = cadena.toLowerCase();
+			datos = cargar_datos(cadena);
+			datos = limpiar_datos(datos);
+			if (datos.length>0){
+				cadena = cadena_leida(datos);
+				datos = juntar(datos);
+				heading.innerHTML = "La entrada es: " + cadena;
+				representar(datos);
+				document.getElementById("marcador_intervalos").innerHTML = "0/0";
+				actBotones("empezar");
+				return datos;
+			}
+			else{
+				heading.innerHTML = "La entrada no es válida, vuelva a intentarlo";
+			}
+		}
+
+		async function f_empezar(){
+			let dato;
+			let datos = f_enviar();
+			if (datos.length==0){
+				document.querySelector('h1').innerHTML = "No se puede empezar sin una entrada válida";
+			} else{
+				dactBotones("empezar", "enviar");
+				actBotones("pausar","terminar");
+				let par = new pareja();
+				for (let i=0;i<datos.length;i++) {
+					par = datos[i];
+					document.getElementById("marcador_intervalos").innerHTML = `${(i+1)}/${datos.length}`;
+					intervalo_activado(i);
+					dato = await contar (0, par.valor, par.tipo);            
+					intervalo_desactivado(i);
+					if (dato == 0){
+						terminar = !terminar;
+						return;
+					}
+				}
+				pitido_final();
+			}
+		}
+
+		async function contar(n, t, m){
+			if ((m != "t") && ( n == 0))
+				pitido(m,1000);
+			for (let i=n; i<t; i++){
+				document.getElementById("marcador_central").innerHTML = i < 10 ? "0" + i : i;
+				await pausa(1000);
+				if (pausado){
+					while (pausado){
+						await pausa(100);
+						if (terminar) return 0;
+					}
+					return contar(i, t, m);
+				}
+				if (terminar) return 0;
+				if (( (t-i) < 5) && ( (t-i) > 1 ))
+					pitido(0,250);
+			}
+			document.getElementById("marcador_central").innerHTML = t < 10 ? "0" + t : t;
+			return t;
+		}
+
+
+		function pausa(ms) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+
+		function actBotones (...botones){
+			botones.forEach(b => {
+				document.getElementById(`${b}`).disabled = false;
+			});
+		}
+
+		function dactBotones (...botones){
+			botones.forEach(b => {
+				document.getElementById(`${b}`).disabled = true;
+			});
+		}
+
+
+		function f_terminar (){
+			terminar = !terminar;
+			document.getElementById("marcador_intervalos").innerHTML = "0/0";
+			document.getElementById("marcador_central").innerHTML = "--";
+			document.getElementById("pausar").innerHTML = "Pausar";
+			pausado = false;
+			
+			actBotones("empezar", "enviar");
+			dactBotones("pausar","terminar");
+		}
+
+		async function pitido_final (){
+			pitido (0,2000);
+			dactBotones("pausar","terminar");
+			await pausa(2000);
+			document.getElementById("marcador_central").innerHTML = "Fin";
+			actBotones("empezar", "enviar");
+		}
+
+		function intervalo_activado (n){
+			let caja = document.getElementById(`caja${n}`);
+			caja.classList.add("anicrece");
+		}
+
+		function intervalo_desactivado (n){
+			let caja = document.getElementById(`caja${n}`);
+			caja.classList.remove("anicrece");
+			caja.style.height = "130px";
+			caja.classList.add("anidecrece");
+		}
+
+		function f_pausar(){
+			pausado = !pausado;
+			document.getElementById("pausar").innerHTML = pausado ? "Reanudar" : "Pausar";
+		}
+
+		function beep(duracion, frecuencia, volumen){	//genera un pitido según la "duración", la "frecuencia y el "volumen" indicados
+			return new Promise((resolve, reject) => {
+				// fijar valores predeterminados si no se indican al llamar la función
+				duracion = duracion || 200;
+				frecuencia = frecuencia || 440;
+				volumen = volumen || 10;
+
+			try{
+				const myAudioContext = new AudioContext();
+				let oscillatorNode = myAudioContext.createOscillator();
+				let gainNode = myAudioContext.createGain();
+				
+				oscillatorNode.connect(gainNode);
+				oscillatorNode.frequency.value = frecuencia;
+				// oscillatorNode.type= "sin";
+				gainNode.connect(myAudioContext.destination);
+				gainNode.gain.value = volumen * 0.01;
+				oscillatorNode.start(myAudioContext.currentTime);
+				oscillatorNode.stop(myAudioContext.currentTime + duracion * 0.001);
+				
+				oscillatorNode.onended = () => {
+					resolve();
+				};
+			}catch(error){
+				reject(error);
+			}
+			});
+		}
+
+		async function pitido (dato, dur){		//genera pitido, según "dato" será agudo si se inicia un ciclo de actividad o grave si es de descanso
+			let vol = 50;
+			if (dato == "a") 
+				beep(dur,880,vol);
+			else // if (dato == "d")
+				beep(dur,440,vol);
+
+		}
+	</script>
+
+</html>
