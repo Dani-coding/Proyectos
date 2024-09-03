@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="es">
+<!--
+
+Ya quita el último ciclo del último intervalo si es de descanso 
+Ya visualiza la cuenta atrás de ese retardo inicial
+Ya aparecen y desaparecen los Ciclos según se activan y desactivan
+
+
+Mejoras:
+
+
+	- Crear marcador de tiempo total
+	
+	- Replantear la reproducción como el recorrido de un array 
+		creado con el conjunto de ciclos e Intervalos
+	- Replantear el uso de await y funciones asincrónicas para poder 
+		parar sin perder la infomación 
+		(buscar alternativa con una reproducción en otra ventana)
+		(alternativa: hacer todas las esperas por segundo y cortar)
+
+-->
+  <head>
+    <meta charset="utf-8"/>
+	<meta name="author" content="Daniel B.V." />
+    <title> TIMER - INTERVAL TRAINING </title>
+  </head>
+
+
+  
+  <body style="background-color: Tan">
+
+	<h1 class="titulo"> Intervalos: </h1>
+	<div class="contenedorN_int">
+		<label for="N_Int"  style="font-size: 18"> Número de intervalos: </label>
+		<input class="entrada" type="number" id="N_Int" value="1" min="1" max="1000" />
+	
+	
+	<label for="Tprevio"  style="font-size: 18"> Tiempo previo: </label>
+	<input class="entrada" type="number" id="Tprevio" value="15" min="0" max="60" />
+	<span style="font-size: 18"> segundos </span>
+	</div>
+	<p>  </p>
+	<div class="lasCajas">
+	
+		<div class="CajaIntervalos">
+			<div class="titulo_int"> Faltan </div>
+			<div class="recuadro" id="i1">
+				<div class="texto_int" id="texto_i1"> 1 </div>
+			</div>
+		</div>
+		
+		<div class="CajaIntervalos" id="caja_Hechos">
+			<div class="titulo_int"> Hechos </div>
+			<div class="recuadro" id="i2">
+				<div class="texto_int" id="texto_i2"> 0 </div>
+			</div>
+		</div>
+		
+		<div class="CajaIntervalos" id="caja_TP">
+			<div class="titulo_int"> T. previo </div>
+			<div class="recuadro" id="recuadro_TP">
+				<div class="texto_int" id="texto_TP"> 15 </div>
+			</div>
+		</div>
+	</div>
+	<p>  </p>
+	
+	<span style="font-size: 18"> Introduce el tiempo del ciclo </span>
+	<span id="Titulo_Ciclo" style="font-size: 18">1º </span>
+	<span style="font-size: 18"> : </span>
+    <label for="cantidad"></label>
+	<input class="entrada" type="number" id="cantidad" value="5" min="5" max="3600" />
+	<span style="font-size: 18"> segundos </span>
+	<p>  </p>
+	
+		
+	<button class="btn" type="button" id="A_btn">Actividad</button><span>   </span>
+	<button class="btn" type="button" id="D_btn">Descanso</button><span>   </span>
+	<button class="btn" type="button" id="E_btn" disabled=true>Eliminar</button><span>  </span>
+	<button class="btn" type="button" id="R_btn">A cero</button>
+	
+	<h1 class="titulo"> Composión del Intervalo: </h1>
+	
+	<div class="charts">
+            <div class="chart">
+                <!-- un circulo inicial de fondo-->
+                <!--<div class="circle center-abs"></div>   -->
+                <!-- area para SVG -->
+                <svg class="center-abs" width="150" height="150">
+                    <circle class="inner" cx="75" cy="75" r="70" /> 
+                   <!-- un segundo circulo en SVG con su ubicacion en coordenadas x,y y el radio de expansion -->
+                    <circle class="outer" cx="75" cy="75" r="70" />
+                </svg>
+                <!-- etiqueta para el contador, en este caso el ciclo1 -->
+                <span class="text_center-abs" id="texto_c1">00</span>
+                <h3>Ciclo 1º</h3>
+            </div>
+            <div class="chart">
+                <!--<div class="circle center-abs"></div>   -->
+                <svg class="center-abs" width="150" height="150">
+                    <circle class="inner" cx="75" cy="75" r="70" /> 
+                    <circle class="outer" cx="75" cy="75" r="70" />
+                </svg>
+                <span class="text_center-abs" id="texto_c2">00</span>
+                <h3>Ciclo 2º</h3>
+            </div>
+            <div class="chart">
+                 <!--<div class="circle center-abs"></div>   -->
+                <svg class="center-abs" width="150" height="150">
+                    <circle class="inner" cx="75" cy="75" r="70" /> 
+                    <circle class="outer" cx="75" cy="75" r="70" />
+                </svg>
+                <span class="text_center-abs" id="texto_c3">00</span>
+                <h3>Ciclo 3º</h3>
+            </div>
+            <div class="chart">
+                 <!--<div class="circle center-abs"></div>   -->
+                <svg class="center-abs" width="150" height="150">
+                    <circle class="inner" cx="75" cy="75" r="70" /> 
+                    <circle class="outer" cx="75" cy="75" r="70" />
+                </svg>
+                <span class="text_center-abs" id="texto_c4">00</span>
+                <h3>Ciclo 4º</h3>
+            </div>
+			<div class="chart">
+                 <!--<div class="circle center-abs"></div>   -->
+                <svg class="center-abs" width="150" height="150">
+                    <circle class="inner" cx="75" cy="75" r="70" /> 
+                    <circle class="outer" cx="75" cy="75" r="70" />
+                </svg>
+                <span class="text_center-abs" id="texto_c5">00</span>
+                <h3>Ciclo 5º</h3>
+            </div>
+    </div>   	
+	<p>  </p>
+	
+	<button class="btn" type="button" id="Empezar">Empezar</button>
+	<button class="btn" type="button" id="P_btn" disabled=true>Reiniciar</button>
+	<div class="contenedorVolumen">
+		<label for="controlVolumen" > VOLUMEN: </label>
+		<input class="slider" type="range" id="controlVolumen" min="1" max="100" value="50" >
+	</div>
+	
+	<p>  </p>
+	<div class = "Tacumulado">
+		<span style="font-size: 22"> El tiempo total del entrenamiento es: </span>
+		<span id = "text_Tentrenamiento"> 00 </span>
+	</div>
+	<div class = "Tacumulado">
+		<span style="font-size: 22"> El tiempo restante del entrenamiento es: </span>
+		<span id = "text_Tacumulado"> 00 </span>
+	</div>
+
+<style>
+
+.entrada {				/* cajas input number */
+	width: 4em;
+	font-size: 18;
+	text-align: right;
+}
+
+.btn {					/* botones en general */
+  -webkit-border-radius: 26;
+  -moz-border-radius: 26;
+  border-radius: 26px;
+  font-family: Arial;
+  color: #000000;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 12px;
+  text-decoration: none;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+
+#D_btn {			/* botón "Descanso" */
+	background: #eb4205;
+	border: solid #b32929 4px;
+	
+}
+#D_btn:hover {
+	 background: #FF4500;
+	 text-decoration: none;
+}
+#D_btn:disabled {
+	/*border: 4px solid black;*/
+	background-color: grey;
+	
+}
+
+#A_btn {			/* botón actividad */
+	background: #7aeb00;
+	border: solid #55cd21  4px;
+	
+}
+#A_btn:hover {
+	 background: #7CFC00;
+	 text-decoration: none;
+}
+#A_btn:disabled {
+	/*border: 4px solid black;*/
+	background-color: grey;
+}
+
+
+.lasCajas{				/* el conjunto de los marcadores */
+    display: flex;
+
+}
+
+	
+.CajaIntervalos{		/* los marcadores rectangulares de intervalos y de tiempo */
+	display: inline-block;
+	width: 120px;
+	height: 100px;
+	border-radius: 10px;
+	background: LightBlue;
+	font-size: 25;
+	text-align: center;
+	margin-right: 10px;
+}
+.recuadro{				/* interior del marcador rectangular */
+	display: inline-table;
+	border-radius: 10px;
+	width: 100px;
+	height: 50px;
+	background: LightSkyBlue;
+}	
+
+.texto_int{				/* los números de los marcadores rectangulares */
+	
+	color: black;
+	text-align: center;
+	vertical-align: middle;
+	font-size: 50;
+	
+}
+
+.charts{				/* el conjunto de los marcadores circulares */
+    display: flex;
+	max-width: 900px;
+    margin:10px 10px auto;
+	position: relative;
+	visibility: hidden;
+}
+.chart{					/* cada uno de los marcadores circulares */
+    flex:1;
+	position: relative;
+	height: 190px;
+}
+
+.center-abs{			/* los círculos SVG */
+    top:40%;
+    left:40%;
+    transform:translate(-50%, -50%);
+    position: absolute;
+}
+
+.chart h3{				/* los nombres de los marcadores circulares con el texto "Ciclo nº" */
+    color:#fff;
+    font-size: 1.8em;
+    position: relative;
+    top: 120px;
+	right: 12px;
+    width: 100%;
+	text-align: center;
+    text-shadow: 1px 1px 10px #000;
+}
+.chart svg{
+    z-index: 2;
+}
+
+.text_center-abs{		/* los número de los marcadores circulares */
+	top:40%;
+    left:40%;
+    transform:translate(-50%, -50%);
+    position: absolute;
+    z-index: 3;
+    text-align: center;
+    width: 100%;
+    font-size: 3.8em;
+    font-weight: 700;
+    color:black
+}
+.inner{					/* el círculo trasero */
+    fill:transparent;
+    stroke: Gainsboro;
+    stroke-width: 10; 
+    stroke-dasharray: 439; 
+   
+}
+
+.outer{					/* el círculo delantero que cambia de tamaño */
+    fill:transparent;
+    stroke: Gainsboro;				/* color de la circunferencia */
+    stroke-width: 10;  				/* grosor de la circunferencia */
+    stroke-dasharray: 439; 			/* numero de relleno del borde, se usa el mismo valor en el script.js */
+    transform: rotate(270deg) translate(-150px, 0);  	/* giro y ajuste de posición; se gira el circulo para que su apertura sea en la parte superior */    
+}
+
+#caja_TP{						/* Caja exterior del tiempo previo */
+	background: SandyBrown;
+	margin-left: 100px;
+}
+#recuadro_TP{					/* Caja interior del tiempo previo */
+	background: Chocolate;
+}
+
+.titulo{						/* Subrayado de los títulos "Intervalos" y "Composición del Intervalo" */			
+	text-decoration:underline;
+}
+#contenedorN_int{				/* contenedor de la introducción de números (inputs con texto) */
+	display: inline-block;
+	}
+#N_Int{							/* número de las cajas input */
+	margin-right: 50px;
+}
+.contenedorVolumen{				/* contenedor del volumen */
+	padding-top: 10px;
+	padding-left: 30px;
+	display: inline-block;
+	font-size: 25;
+	font-weight: 550;
+}
+
+#text_Tentrenamiento{
+	display: inline-block;
+	font-size: 30;
+}
+
+#text_Tacumulado{
+	display: inline-block;
+	font-size: 40;
+}
+
+
+	
+	
+	</style>
+
+    <script>
+	
+		const myAudioContext = new AudioContext();
+		var Nciclos = 0;								//número de ciclos programados
+		var Tciclos = [0]								//array con el tiempo de cada ciclo proramado
+		var Mciclos = ["i"];							//array con el tipo de ciclo "a" actividad o bien "d" descanso
+		var Tinicial = 15;								//segundos de espera previos al incio de los intervalos  
+		var Vol = 50;									//valor del volumen de reproducción 
+
+		var elemento = document.getElementsByClassName('chart');
+		elemento[0].style.visibility = "visible";		//hace visible el marcador del ciclo 1º
+		
+		function paddedFormat(num) {					//pone un cero delante de número menores de 10, para el efecto de segundero
+			return num < 10 ? "0" + num : num; 
+		}
+
+		async function startCountDown(i, duration, element) {	//realiza la cuenta atrás del ciclo "i", que dura "duration" y cuyo marcador es "element"
+			let sec = duration-1;
+			
+			while (sec>=0){
+				await pausa(1000);
+				element.textContent = `${paddedFormat(sec)}`;
+				efecto_circulo (i, duration, sec);
+				sec--;
+				if (sec==2) {
+					pitidos_previos (3);
+				}
+			}
+		}
+		
+		async function CuentaAtrasSinCero(i, duration, element) {	// es idéntica a "startCountDown" pero sin marcar el cero al finalizar, es necesaria por un pequeño desfase que se produce
+			let sec = duration-1;
+			
+			while (sec>0){
+				await pausa(1000);
+				element.textContent = `${paddedFormat(sec)}`;
+				efecto_circulo (i, duration, sec);
+				sec--;
+				if (sec==2) {
+					pitidos_previos (3);
+				}
+			}
+			
+		}
+
+		function beep(duracion, frecuencia, volumen){	//genera un pitido según la "duración", la "frecuencia y el "volumen" indicados
+			return new Promise((resolve, reject) => {
+				// fijar valores predeterminados si no se indican al llamar la función
+				duracion = duracion || 200;
+				frecuencia = frecuencia || 440;
+				volumen = volumen || 10;
+
+			try{
+				let oscillatorNode = myAudioContext.createOscillator();
+				let gainNode = myAudioContext.createGain();
+				
+				oscillatorNode.connect(gainNode);
+				oscillatorNode.frequency.value = frecuencia;
+				// oscillatorNode.type= "sin";
+				gainNode.connect(myAudioContext.destination);
+				gainNode.gain.value = volumen * 0.01;
+				oscillatorNode.start(myAudioContext.currentTime);
+				oscillatorNode.stop(myAudioContext.currentTime + duracion * 0.001);
+				
+				oscillatorNode.onended = () => {
+					resolve();
+				};
+			}catch(error){
+				reject(error);
+			}
+			});
+		}
+		
+		function efecto_circulo (i, total, resto){ 		//cambia el tamaño del círulo en los contadores dando el efecto de cuenta atrás
+			const strokeDashoffset = 439; 								// valor del relleno del contorno, ojo es el mismo establecido en la hoja de estilos
+			var circleSVG = document.getElementsByClassName('outer');	// seleciona la clase del los círculos móviles
+			var valPerDay = strokeDashoffset / total; 					// calcula el tamaño del círculo completo en las unidades dadas por "total"
+			var size = strokeDashoffset - (valPerDay * resto); 			// calcula el valor del tamaño del círculo que se debe visualizar quitándole el "resto"
+			circleSVG[i].style.strokeDashoffset = size; 				// asignación del nuevo valor del tamaño del círculo al marcador correspondiente "i"
+}		
+		
+			A_btn.onclick = function Func_A_btn() {		//añade un nuevo ciclo de actividad
+				num = document.getElementById("cantidad").value;
+				if (Nciclos >= 5){
+					alert ("No se admiten más de 5 ciclos");
+					Nciclos = 5;
+				}
+				else if (num<5){
+					alert ("El tiempo mínimo es 5 segundos");				
+				}
+				else 
+				{
+					Mciclos [Nciclos] = "a";						
+					Tciclos [Nciclos] = num;		
+					Nciclos = Nciclos + 1;
+					c1 = document.querySelector("#texto_c" + Nciclos);
+					c1.textContent = `${paddedFormat(Tciclos[Nciclos-1])}`;
+					c1 = document.getElementsByClassName('inner');
+					c1[Nciclos-1].style.stroke = "#55cd21";
+					c1 = document.getElementsByClassName('outer');
+					c1[Nciclos-1].style.stroke = "LawnGreen";
+					efecto_circulo (Nciclos-1, 1, 1);
+					if (Nciclos==1)
+						document.getElementById("E_btn").disabled = false;
+					if (Nciclos<5){
+						c1 = document.getElementById("Titulo_Ciclo");
+						c1.textContent = Number(Nciclos+1) + "º ";
+						c1 = document.getElementsByClassName('chart');
+						c1[Nciclos].style.visibility = "visible";
+					}
+					else{
+						document.getElementById("A_btn").disabled = true;
+						document.getElementById("D_btn").disabled = true;
+					}
+				}
+				Tiempo_acumulado();
+			} 
+
+			D_btn.onclick = function Func_D_btn() {		//añade un nuevo ciclo de descanso
+				num = document.getElementById("cantidad").value
+				if (Nciclos >= 5){
+					alert ("No se admiten más de 5 ciclos");
+					Nciclos = 5;
+				}
+				else if (num<5){
+					alert ("El tiempo mínimo es 5 segundos");				
+				}
+				else
+				{
+					Mciclos [Nciclos] = "d";						
+					Tciclos [Nciclos] = num;
+					Nciclos = Nciclos + 1;
+					c1 = document.querySelector("#texto_c" + Nciclos);
+					c1.textContent = `${paddedFormat(Tciclos[Nciclos-1])}`;
+					
+					c1 = document.getElementsByClassName('inner');
+					c1[Nciclos-1].style.stroke = "#b32929";
+					c1 = document.getElementsByClassName('outer');
+					c1[Nciclos-1].style.stroke = "OrangeRed";
+					
+					efecto_circulo (Nciclos-1, 1, 1);
+					if (Nciclos==1)
+						document.getElementById("E_btn").disabled = false;
+					if (Nciclos<5){
+					    c1 = document.getElementById("Titulo_Ciclo");
+					    c1.textContent = Number(Nciclos+1) + "º ";
+					    c1 = document.getElementsByClassName('chart');
+						c1[Nciclos].style.visibility = "visible";
+					}
+					else{
+						document.getElementById("A_btn").disabled = true;
+						document.getElementById("D_btn").disabled = true;
+					}
+				}
+				Tiempo_acumulado();
+			}
+
+			E_btn.onclick = function Func_E_btn() {		//elimina el último ciclo añadido
+				if (Nciclos <= 0){
+					alert ("No hay ciclos que eliminar");
+					Nciclos = 0;
+				}
+				else
+				{
+				Tciclos.pop(); 					
+				Mciclos.pop(); 
+				c1 = document.querySelector("#texto_c" + Nciclos);
+				c1.textContent = "00" ;
+				c1 = document.getElementsByClassName('inner');
+				c1[Nciclos-1].style.stroke = "Gainsboro";
+				c1 = document.getElementsByClassName('outer');
+				c1[Nciclos-1].style.stroke = "Gainsboro";
+				efecto_circulo (Nciclos-1, 1, 1);
+				c1 = document.getElementById("Titulo_Ciclo");
+				c1.textContent = Number(Nciclos) + "º ";
+				
+				if (Nciclos==5){
+					document.getElementById("A_btn").disabled = false;
+					document.getElementById("D_btn").disabled = false;
+				}
+				else{
+					c1 = document.getElementsByClassName('chart');
+					c1[Nciclos].style.visibility = "hidden";
+				}
+				if (Nciclos==1)
+						document.getElementById("E_btn").disabled = true;
+				Nciclos=Nciclos-1;
+				}
+			Tiempo_acumulado();
+			}
+
+			R_btn.onclick = function Func_R_btn() {		//elimina todos los ciclos programados
+				if (Nciclos<5){
+				c1 = document.getElementsByClassName('chart');
+				c1[Nciclos].style.visibility = "hidden";
+				}
+				while (Nciclos > 0) {
+					Tciclos.pop(); 					
+					Mciclos.pop();
+					c1 = document.querySelector("#texto_c" + Nciclos);
+					c1.textContent = "00" ;
+					efecto_circulo (Nciclos-1, 1, 1);
+					c1 = document.getElementsByClassName('inner');
+					c1[Nciclos-1].style.stroke = "Gainsboro";
+					c1 = document.getElementsByClassName('outer');
+					c1[Nciclos-1].style.stroke = "Gainsboro";
+					c1 = document.getElementsByClassName('chart');
+					c1[Nciclos-1].style.visibility = "hidden";
+					Nciclos--;
+				}
+				c1 = document.getElementById("Titulo_Ciclo");
+				c1.textContent = Number(Nciclos+1) + "º ";
+				c1 = document.getElementsByClassName('chart');
+				c1[Nciclos].style.visibility = "visible";
+				document.getElementById("A_btn").disabled = false;
+				document.getElementById("D_btn").disabled = false;
+				document.getElementById("E_btn").disabled = true;
+				Tiempo_acumulado();
+			}
+
+			function pausa(ms) {						//crea un "delay" en funciones asincroticas
+				/*
+				if (Pararlo){
+					return;
+				}*/
+				
+				return new Promise(resolve => setTimeout(resolve, ms));
+			}
+
+			async function inicio (quitar_ultimo) {		//reproduce un intervalo, si "quitar último" no reproduce el último porque es de descanso
+				var tiempo = 2
+				let nombre = " "
+				var num = 0
+				if (quitar_ultimo) {num = Nciclos-2;}
+				else {num = Nciclos-1;}
+				
+				if (Nciclos>1){
+					for (var i=0; i < num; i++){
+						tiempo = Tciclos [i];
+						nombre = "#texto_c" + (i+1);
+						c1 = document.querySelector(nombre);
+						c1.textContent = `${paddedFormat(tiempo)}`;
+						efecto_circulo (i, tiempo, tiempo);
+						pitido (Mciclos [i]);
+						startCountDown(i,tiempo, c1);
+						await pausa((tiempo)*1000);
+						//c1 = document.getElementsByClassName('inner');
+						//c1[i].style.stroke = "Gainsboro";
+					}
+						tiempo = Tciclos [i];
+						nombre = "#texto_c" + (i+1);
+						c1 = document.querySelector(nombre);
+						c1.textContent = `${paddedFormat(tiempo)}`;
+						efecto_circulo (i, tiempo, tiempo);
+						pitido (Mciclos [i]);
+						CuentaAtrasSinCero(i,tiempo, c1);
+						await pausa((tiempo)*1000);
+				}
+				else if (Nciclos == 1) {
+				// (num==0) {
+				tiempo = Tciclos [0];
+				nombre = "#texto_c" + 1;
+				c1 = document.querySelector(nombre);
+				c1.textContent = `${paddedFormat(tiempo)}`;
+				efecto_circulo (0, tiempo, tiempo);
+				pitido (Mciclos [0]);
+				CuentaAtrasSinCero(0,tiempo, c1);
+				await pausa((tiempo)*1000);
+				}
+				
+				
+			}
+			
+			function reiniciar() {						//recarga los marcadores de ciclo al finalizar un Intervalo
+				for (var i = 0; i < Nciclos; i++) {
+					tiempo = Tciclos [i];
+					nombre = "#texto_c" + (i+1);
+					c1 = document.querySelector(nombre);
+					c1.textContent = `${paddedFormat(tiempo)}`;
+					efecto_circulo (i, tiempo, tiempo);
+					if (Mciclos [i] === "a"){
+						c1 = document.getElementsByClassName('inner');
+						c1[i].style.stroke = "#55cd21";
+						c1 = document.getElementsByClassName('outer');
+						c1[i].style.stroke = "LawnGreen";
+					}
+					else{
+						c1 = document.getElementsByClassName('inner');
+						c1[i].style.stroke = "#b32929";
+						c1 = document.getElementsByClassName('outer');
+						c1[i].style.stroke = "OrangeRed";
+					}
+				}
+			}
+			
+			function pitido (dato){						//genera pitido, según "dato" será agudo si se inicia un ciclo de actividad o grave si es de descanso
+				if (dato=="a")
+					beep(1000,880,Vol);
+				else
+					beep(1000,440,Vol);
+
+			}
+			
+			async function pitidos_previos (num) {		//genera "num" pitidos cortos por segundo, para indicar que se va a acabar un ciclo de tiempo
+				while (num>0){
+					beep(250,440,Vol);
+					await pausa (1000);
+					num--;
+				}
+			}
+			
+			async function cuenta_inicial(){			//realiza la cuenta atrás del tiempo previo al inicio de los intervalos
+				Tinicial = document.getElementById("Tprevio").value;
+				let c1 = document.getElementById("texto_TP");
+				c1.textContent = `${paddedFormat(Tinicial)}`;
+				//startCountDown(Tinicial, c1);
+				let sec = Tinicial-1;
+			
+				while (sec>=0){
+					await pausa(1000);
+					c1.textContent = `${paddedFormat(sec)}`;
+					sec--;
+					if (sec==2) {
+						pitidos_previos (3);
+					}
+				}
+			}
+			
+			async function reproducir () {				//se activa después del tiempo previo, reproduce todos los intervalos programados
+				let T_total=0;
+				let num = document.getElementById("N_Int").value;
+				Tciclos.forEach(function(dato) {
+					T_total = Number(T_total) + Number(dato);
+				});
+								
+				cuenta_inicial();
+				await pausa (Tinicial * 1000);
+				Descontar_acumulado();
+				
+				for (var i=num; i > 0; i--){
+					if ( (Mciclos [Nciclos-1] == "d") && (i==1) ){
+						T_total = Number(T_total) - Number(Tciclos [Nciclos-1]);
+						
+						inicio(true);
+						await pausa((T_total)*1000);
+					}
+					else{
+						inicio(false);
+						await pausa((T_total)*1000);
+					}
+					document.getElementById("texto_i1").textContent = Number(i-1);
+					document.getElementById("texto_i2").textContent = Number(num-i+1);
+					reiniciar();
+				}
+				document.getElementById("texto_i1").textContent = num;
+				document.getElementById("texto_i2").textContent = 0;
+				document.getElementById("texto_TP").textContent = `${paddedFormat(Tinicial)}`;
+
+				beep(2000,440,Vol);
+				await pausa(2000);
+				desbloquear();
+
+			}
+			
+			function bloquear () {						//inactiva los botones de modificación de ciclos durante la reproducción
+				document.getElementById("A_btn").disabled = true;
+				document.getElementById("D_btn").disabled = true;
+				document.getElementById("E_btn").disabled = true;
+				document.getElementById("R_btn").disabled = true;
+				document.getElementById("N_Int").disabled = true;
+				document.getElementById("cantidad").disabled = true;
+				document.getElementById("Empezar").disabled = true;
+				document.getElementById("P_btn").disabled = false;
+			}
+			
+			function desbloquear () {					//vuelve a activar los botones de modificación de los ciclos tras la reproducción
+				document.getElementById("A_btn").disabled = false;
+				document.getElementById("D_btn").disabled = false;
+				document.getElementById("E_btn").disabled = false;
+				document.getElementById("R_btn").disabled = false;
+				document.getElementById("N_Int").disabled = false;
+				document.getElementById("cantidad").disabled = false;
+				document.getElementById("Empezar").disabled = false;
+				document.getElementById("P_btn").disabled = true;
+			}			
+		
+			Empezar.onclick = function() {				//comprueba si se dan las codiciones e inicia la reproducción completa
+				let num = document.getElementById("N_Int").value
+				Tinicial = document.getElementById("Tprevio").value
+				if ( (num>0) && (Nciclos>0) && (Tinicial>0) ){	
+					if ( (Nciclos==1) && (Mciclos[0]=="d") ){ alert ("No hay actividad");}
+					else {
+						var c1 = document.getElementsByClassName('chart');
+						c1[Nciclos].style.visibility = "hidden";
+					    bloquear();
+						Tiempo_acumulado();
+						
+					    reproducir();
+					}
+				}
+				
+			}
+			
+			P_btn.onclick = function() {				//está disponible durante la reproducción para detenerla ¡ elimina los datos !
+				window.location.reload();
+			}
+
+			N_Int.addEventListener("input", function() {	//carga el dato de número de intervalos
+				document.getElementById("texto_i1").textContent = document.getElementById("N_Int").value;
+				Tiempo_acumulado();
+				});
+			
+			Tprevio.addEventListener("input", function() {	//carga el dato del tiempo previo
+				Tinicial = document.getElementById("Tprevio").value;
+				document.getElementById("texto_TP").textContent = `${paddedFormat(Tinicial)}`;
+				});
+			
+			controlVolumen.oninput = function() {			//carga el dato del control de volumen
+				Vol = this.value;
+			} 
+
+			Tiempo_acumulado = function() {
+				var num = 0;
+				var Num_Int = document.getElementById("N_Int").value;
+				for (i=0; i<Nciclos; i++){
+					num = num + parseInt (Tciclos[i]);
+				}
+				num=num*Num_Int;
+				if (Mciclos[i-1]=="d"){	
+					num = num - parseInt (Tciclos[i-1]);}
+				var min = Math.floor(num / 60);
+				var sec = Math.floor(num % 60);
+				var texto = " " + min + " : " + `${paddedFormat(sec)}`;
+				document.getElementById("text_Tentrenamiento").textContent = texto;
+				document.getElementById("text_Tacumulado").textContent = texto;
+			}
+			
+			Descontar_acumulado = async function() {
+				var num = 0;
+				var Num_Int = document.getElementById("N_Int").value;
+				for (i=0; i<Nciclos; i++){
+					num = num + parseInt (Tciclos[i]);
+				}
+				num=num*Num_Int;
+				if (Mciclos[i-1]=="d"){
+					num = num - parseInt (Tciclos[i-1]);}
+				var min = Math.floor(num / 60);
+				var sec = Math.floor(num % 60);
+				var texto = " " + min + " : " + `${paddedFormat(sec)}`;
+				document.getElementById("text_Tacumulado").textContent = texto;
+				while (num>0){
+					await pausa (1000);
+					num--;
+					min = Math.floor(num / 60);
+					sec = Math.floor(num % 60);
+					var texto = " " + min + " : " + `${paddedFormat(sec)}`;
+					document.getElementById("text_Tacumulado").textContent = texto;
+				}
+				document.getElementById("text_Tacumulado").textContent = document.getElementById("text_Tentrenamiento").textContent;
+			}
+    </script>
+	
+	
+	
+	
+  </body>
+ 
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cifras</title>
+    <style>
+        body{
+            margin: 10px;
+            box-sizing: border-box;
+            display: grid;
+            place-content: center;
+            background-color: rgb(78, 78, 78);
+        }
+        h1{
+            display: grid;
+            place-content: center;
+            padding: 10px;
+            color:rgb(211, 211, 211)
+
+        }
+        button{
+            margin: 20px;
+            padding: 8px;
+            background-color: rgb(131, 131, 131);
+            border-radius: 5px;
+            border: 1px solid rgb(180, 180, 180);
+            box-shadow: 5px 5px 5px 2px rgb(51, 51, 51);
+        }
+        label, input, button{
+            font-size: 18px;
+        }
+        label{
+            color:rgb(211, 211, 211)
+        }
+        input{
+            background-color: rgb(228, 228, 228);
+            border-radius: 5px;
+            padding: 5px;
+        }
+        #textSol, #operaciones{
+            color:rgb(211, 211, 211);
+            font-size: 24px;    
+        }
+        .datos{
+            display: grid;
+            place-content: center;
+        }
+        .botones{
+            display: flex;
+            justify-content: center;
+
+        }
+        .panel{
+            display: grid;
+            place-content: center;
+
+        }
+        .cifras{
+            display: flex;
+            margin: 20px;
+        }
+        .cifra{
+            margin: 10px;
+            display: flex;
+            place-content: center;
+            padding: 10px;
+            font-size: 32px;
+            color: rgb(228, 228, 228);
+            background-color: rgb(99, 99, 99);
+            border-radius: 5px;
+            border: 1px solid rgb(180, 180, 180);
+            box-shadow: 5px 5px 5px 2px rgb(51, 51, 51);
+        }
+        .resultados{
+            display: flex;
+            place-content: center;
+            margin: 20px;
+        }
+        .resultado{
+            font-size: 40px;
+            padding: 10px;
+            display: flex;
+            place-content: center;
+            width: 80px;
+            background-color: rgb(131, 131, 131);
+            border-radius: 5px;
+            border: 1px solid rgb(180, 180, 180);
+            box-shadow: 5px 5px 5px 2px rgb(51, 51, 51);}
+
+    </style>
+</head>
+<body>
+    <h1>C I F R A S</h1>
+    <div class="datos">
+        <div>
+            <label for="entrada1">Introduce las cifras: </label>
+            <input type="text" id="entrada1" name="entrada1" placeholder="ej: 3 8 25 3 100 7" autofocus>    
+        </div>
+        <p></p>
+        <div>
+            <label for="entrada2">Introduce el resultado deseado: </label>
+            <input type="text" id="entrada2" name="entrada2" placeholder="ej: 326" maxlength="3">    
+        </div>
+        <p></p>
+        <div class="botones">
+            <button id="b_resolver">Resolver</button>
+            <button id="b_generar">Generar</button>
+            <button id="b_reiniciar">Reiniciar</button>
+        </div>
+    </div>
+    <div class="panel">
+        <div class="cifras">
+            <div class="cifra" id="cifra1">0</div>
+            <div class="cifra" id="cifra2">0</div>
+            <div class="cifra" id="cifra3">0</div>
+            <div class="cifra" id="cifra4">0</div>
+            <div class="cifra" id="cifra5">0</div>
+            <div class="cifra" id="cifra6">00</div>
+        </div>
+        <div class="resultados">
+            <div class="resultado" id="resultado">000</div>
+        </div>
+    </div>
+    <div id="solucion" hidden="true">
+        <div id="textSol"></div>
+        <div id="operaciones"></div>
+    </div>
+    <script>
+        
+        const validos = [1,2,3,4,5,6,7,8,9,10,25,50,75,100]
+        //const cifras = [2,5,10,2,7,25]
+        //let objetivo = 327
+        let objetivo = 0
+        let aproximacion = 0
+        const cifras = []
+        const resultados = []
+
+        document.getElementById("b_resolver").addEventListener("click", b_resolver)
+        document.getElementById("b_generar").addEventListener("click", b_generar)
+        document.getElementById("b_reiniciar").addEventListener("click", b_reiniciar)
+        document.getElementById("entrada1").addEventListener("keyup", leer1)
+        document.getElementById("entrada2").addEventListener("keyup", leer2)
+
+        function b_generar() {
+            document.getElementById("entrada1").value = ""
+            document.getElementById("entrada2").value = ""
+            resultados.length = 0
+            cifras.length = 0
+            for (let i = 0; i < 6; i++) {
+                cifras.push(validos[Math.floor(Math.random() * validos.length)])
+                document.getElementById(`cifra${i+1}`).innerHTML = cifras[i]
+            }
+            objetivo = Math.floor((Math.random() * 990)+10)
+            document.getElementById("resultado").innerHTML = objetivo
+        }
+
+        function b_reiniciar() {
+            location.reload()
+        }
+
+        function leer1(e) {
+            if ( (e.key == "Enter") || (e.key == " ") ){
+                const entrada = this.value
+                const entradas = entrada.split(" ")
+                const numeros = []
+                entradas.forEach(element => {
+                    let n = parseInt(element)
+                    if ( (!isNaN(n)) && (validos.indexOf(n)>-1))
+                        numeros.push(n)
+                })
+                cifras.length = 0
+                for (let i = 0; (i < numeros.length) && (i<6); i++) {
+                    cifras.push(numeros[i])
+                    document.getElementById(`cifra${i+1}`).innerHTML = numeros[i]
+                }
+            }
+        }
+
+        function leer2(e) {
+            if ( (e.key == "Enter") || (e.key == " ") ){
+                const target = parseInt(this.value)
+                if ( (!isNaN(target)) && (target<1000) && (target>10) ){
+                    document.getElementById("resultado").innerHTML = target
+                    objetivo = target
+                }
+            }
+        }
+
+        function b_resolver () {
+            if ( (cifras.length==6) && (objetivo>10) ){
+                resultados.slice()
+                paso1([...cifras])
+                aproximacion = 0
+                const numCal = calcularNum()
+                const operaciones = masCorto(numCal)
+                const res = mostrar_calculos(operaciones, cifras)
+                const boxSol = document.getElementById("textSol")
+                if (aproximacion>0)
+                    boxSol.innerHTML = ("Aproximación: " + aproximacion + ", a " + (Math.abs(aproximacion-objetivo)) + " del exacto, operaciones:")
+                else
+                    boxSol.innerHTML = ("Exacto: " + objetivo + ", operaciones:")
+                const boxOp = document.getElementById("operaciones")
+                boxOp.innerHTML = ""
+                res.forEach(element => {
+                    boxOp.innerHTML = (boxOp.innerHTML + "<br>" + element)
+                })   
+                document.getElementById("solucion").hidden = false
+            }
+            else{
+                alert("Error al introducir los datos")
+            }
+        }
+
+        function calcularNum() {
+            let n = resultados.indexOf(objetivo)
+            if (n<0){
+                let rango = objetivo
+                if (rango>500)
+                    rango = 1000 - rango    
+                for (let i = 1; i < rango; i++) {
+                    if (objetivo+i<1000){
+                        n = resultados.indexOf(objetivo+i)
+                        if (n>-1){
+                            aproximacion = objetivo + i
+                            return n
+                        }
+                    }
+                    if (objetivo-i>10){
+                        n = resultados.indexOf(objetivo-i)
+                        if (n>-1){
+                            aproximacion = objetivo - i
+                            return n
+                        }
+                    }
+                }
+            }
+            aproximacion = 0
+            return n
+        }
+
+        function masCorto(n) {
+            let target, pasos
+            if (aproximacion>0)
+                target = aproximacion
+            else
+                target = objetivo
+            pasos = calculos(n)
+            let next = resultados.indexOf(target, n+1)
+            while (next>0){
+                let aux = calculos(next)
+                if (aux.length<pasos.length){
+                    pasos.length=0
+                    pasos = [...aux]
+                }
+                next = resultados.indexOf(target, next+1)
+            }
+            return pasos
+        }
+
+        function calculos (posicion){
+            let res = []
+            let a = Math.trunc(posicion/60033)
+            res.push(a)
+            let b = posicion % 60033
+            res.push(Math.trunc(b/20011))
+            a = (b % 20011) - 1
+            if (a<0)
+                return res
+            res.push(Math.trunc(a/2001))
+            b = a % 2001
+            res.push(Math.trunc(b/667))
+            a = (b % 667) - 1
+            if (a<0)
+                return res
+            res.push(Math.trunc(a/111))
+            b = a % 111
+            res.push(Math.trunc(b/37))
+            a = (b % 37) - 1
+            if (a<0)
+                return res
+            res.push(Math.trunc(a/12))
+            b = a % 12
+            res.push(Math.trunc(b/4))
+            a = (b % 4) - 1
+            if (a<0)
+                return res
+            res.push(a)
+            if (a>3)
+                console.log("error de cálculo posicional: a = " + a)
+            return res
+        }
+
+        function opera(op, a, b) {
+            let r
+            let res = []
+            if (op==0){
+                r = a + b
+                res.push(a + " + " + b + " = " + r)
+            }else{
+                if (op==1){
+                    if (a>b){
+                        r = a - b
+                        res.push(a + " - " + b + " = " + r)
+                    }
+                    else{
+                        r = b - a
+                        res.push(b + " - " + a + " = " + r)
+                    }
+                }
+                else{
+                    r = a * b
+                    res.push(a + " x " + b + " = " + r)
+                }
+            }
+            res.push(r)
+            return res
+        }
+        function mostrar_calculos(op) {
+            const valores = [...cifras]
+            let cuenta = []
+            const res = []
+            let a, b
+            if (op[0]<5){
+                a = valores[0]
+                b = valores[op[0]+1]
+                valores.splice(0,1)
+                valores.splice(op[0],1)
+            }
+            else{
+                if (op[0]<9){
+                    a = valores[1]
+                    b = valores[op[0]-4+1]
+                    valores.splice(1,1)
+                    valores.splice(op[0]-4,1)
+                }
+                else{
+                    if (op[0]<12){
+                        a = valores[2]
+                        b = valores[op[0]-7+1]
+                        valores.splice(2,1)
+                        valores.splice(op[0]-7,1)
+                    }
+                    else{
+                        if (op[0<14]){
+                            a = valores[3]
+                            b = valores[op[0]-9+1]
+                            valores.splice(3,1)
+                            valores.splice(op[0]-9,1)
+                        }
+                        else{
+                            a = valores[4]
+                            b = valores[5]
+                            valores.splice(4,2)
+                        }
+                    }
+                }
+            }
+            //operac
+            op.shift()
+            cuenta = opera (op[0], a, b)
+            res.push(cuenta[0])
+            valores.unshift(cuenta[1])
+            op.shift()
+            if (op.length==0)
+                return res
+
+            // segunda ronda
+            if (op[0]<4){
+                a = valores[0]
+                b = valores[op[0]+1]
+                valores.splice(0,1)
+                valores.splice(op[0],1)
+            }
+            else{
+                if (op[0]<7){
+                    a = valores[1]
+                    b = valores[op[0]-3+1]
+                    valores.splice(1,1)
+                    valores.splice(op[0]-3,1)
+                    }
+                else{
+                    if (op[0]<9){
+                        a = valores[2]
+                        b = valores[op[0]-5+1]
+                        valores.splice(2,1)
+                        valores.splice(op[0]-5,1)
+                    }
+                    else{
+                        a = valores[3]
+                        b = valores[4]
+                        valores.splice(3,2)
+                    }
+                }
+            }
+            //operac
+            op.shift()
+            cuenta = opera (op[0], a, b)
+            res.push(cuenta[0])
+            valores.unshift(cuenta[1])
+            op.shift()
+            if (op.length==0)
+                return res
+
+            // tercera ronda
+            if (op[0]<3){
+                a = valores[0]
+                b = valores[op[0]+1]
+                valores.splice(0,1)
+                valores.splice(op[0],1)
+            }
+            else{
+                if (op[0]<5){
+                    a = valores[1]
+                    b = valores[op[0]-2+1]
+                    valores.splice(1,1)
+                    valores.splice(op[0]-2,1)
+                }
+                else{
+                    a = valores[2]
+                    b = valores[3]
+                    valores.splice(2,2)
+                }
+            }
+            //operac
+            op.shift()
+            cuenta = opera (op[0], a, b)
+            res.push(cuenta[0])
+            valores.unshift(cuenta[1])
+            op.shift()
+            if (op.length==0)
+                return res
+
+            // cuarta ronda
+            if (op[0]<2){
+                a = valores[0]
+                b = valores[op[0]+1]
+                valores.splice(0,1)
+                valores.splice(op[0],1)
+            }
+            else{
+                a = valores[1]
+                b = valores[2]
+                valores.splice(1,2)
+            }
+            //operac
+            op.shift()
+            cuenta = opera (op[0], a, b)
+            res.push(cuenta[0])
+            valores.unshift(cuenta[1])
+            op.shift()
+            if (op.length==0)
+                return res
+
+            //quinta ronda
+            a = valores[0]
+            b = valores[1]
+            //operac
+            cuenta = opera (op[0], a, b)
+            res.push(cuenta[0])
+            return res
+        }
+
+
+
+        function paso1 (data) {
+            if(data.length==2){
+                resultados.push(data[0]+data[1])
+                resultados.push(Math.abs(data[0]-data[1]))
+                resultados.push(data[0]*data[1])
+                return
+            }
+            for (let i = 0; i < data.length-1; i++) {
+                for (let j = i+1; j < data.length; j++){
+                    //if (resultados.length)
+                    //probar suma
+                    let suma = data[i]+data[j]
+                    let data2=data.toSpliced(j,1).toSpliced(i,1)
+                    data2.unshift(suma)
+                    resultados.push(suma)
+                    paso1(data2)
+                    //probar resta
+                    let resta = data[i]-data[j]
+                    if (resta<0){
+                        resta = -resta
+                        let data2=data.toSpliced(j,1).toSpliced(i,1)
+                        data2.unshift(resta)
+                        resultados.push(resta)
+                        paso1(data2)
+                    }
+                    else{
+                        let data2=data.toSpliced(j,1).toSpliced(i,1)
+                        data2.unshift(resta)
+                        resultados.push(resta)
+                        paso1(data2)                
+                    }
+                    //probar producto
+                    let prod = data[i]*data[j]
+                    data2=data.toSpliced(j,1).toSpliced(i,1)
+                    data2.unshift(prod)
+                    resultados.push(prod)
+                    paso1(data2)            
+                }
+            }
+        }
+    </script>
+</body>
+</html>

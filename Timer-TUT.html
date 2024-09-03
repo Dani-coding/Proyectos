@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Timer - TUT - Interval Training</title>
+        <link rel="stylesheet" href="cssdata.css">
+    </head>
+    <body>
+        <h1 id="muestra">Texto de prueba</h1>
+        <input id="entrada" placeholder="introduzca valores" type="text" autofocus>
+        <button id="enviar" onclick="f_enviar()">Enviar</button>
+        <div id="cajas">
+
+        </div>
+        <div id="marcador">
+            <div id="marcador_intervalos">0/0</div>
+            <div id="marcador_central">--</div>
+        </div>
+        <button id="empezar" onclick="f_empezar()" disabled="true">Empezar</button>
+        <button id="pausar" onclick="f_pausar()"disabled="true">Pausar</button>
+        <button id="terminar" onclick="f_terminar()"disabled="true">Terminar</button>
+    </body>
+    <script src="lectura.js"></script>
+
+</html>

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris con Canvas</title>
+    <style>
+        :root{
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            color-scheme: dark light;
+        }
+        body{
+            margin: 0;
+            padding: 0;
+            display: grid;
+            place-content: center;
+            height: 100dvh;
+        }
+        .header{
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+        }
+        span{
+            font-size: 20px;
+        }
+        .title{
+            font-size: 24px;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 3px;
+        }
+    </style>
+    <script type="module">
+        const canvas = document.querySelector("canvas")
+        const ctx = canvas.getContext("2d")
+        const BLOCK_SIZE = 20
+        const BOARD_WIDTH = 14
+        const BOARD_HEIGHT = 30
+        const board = [[]]
+
+        let gameOver = false
+        let speed = 300
+        let score = 0
+        let level = 1
+
+        canvas.width = BLOCK_SIZE * BOARD_WIDTH
+        canvas.height = BLOCK_SIZE * BOARD_HEIGHT
+
+        //ctx.scale(BLOCK_SIZE, BLOCK_SIZE)
+
+        // Blocks
+
+        let block, nextBlock
+
+        const blocks = [
+            {
+                position: { x: 6, y: 0 },
+                color: 60,
+                shape: [
+                    [1,1],
+                    [1,1]
+                ]
+            },
+            {
+                position: { x: 6, y: 0 },
+                color: 180,
+                shape: [
+                    [1],
+                    [1],
+                    [1],
+                    [1],
+                ]
+            },
+            {
+                position: { x: 6, y: 0 },
+                color: 240,
+                shape: [
+                    [1,1],
+                    [1,0],
+                    [1,0]
+                ]
+            },
+            {
+                position: { x: 6, y: 0 },
+                color: 30,
+                shape: [
+                    [1,1],
+                    [0,1],
+                    [0,1]
+                ]
+            },
+            {
+                position: { x: 6, y: 0 },
+                color: 120,
+                shape: [
+                    [0,1],
+                    [1,1],
+                    [1,0]
+                ]
+            },
+            {
+                position: { x: 6, y: 0 },
+                color: 1,
+                shape: [
+                    [1,0],
+                    [1,1],
+                    [0,1]
+                ]
+            },
+            {
+                position: { x: 6, y: 0 },
+                color: 300,
+                shape: [
+                    [1,0],
+                    [1,1],
+                    [1,0]
+                ]
+            },
+        ]
+
+        /*
+                IMPLEMENTACIONES
+
+            Cuadrícula          <--- Hecho
+            Relieve fichas      <--- Hecho
+            Siguiente ficha     <--- Hecho
+            Puntuación          <--- Hecho
+            Cambio velocidad    <--- Hecho
+            Niveles             <--- Hecho
+
+        */
+
+        function newBlock(){
+            block = structuredClone(nextBlock)
+            nextBlock = structuredClone(blocks[Math.floor(Math.random()*7)])
+            for (let i = 0; i < block.shape.length; i++) 
+                    for (let j = 0; j < block.shape[i].length; j++) 
+                        if (block.shape[i][j] == 1 && (board[block.position.y + i][block.position.x + j] != 0)){
+                            //draw()
+                            gameOver = true
+                        }
+        }
+
+
+        // Game loop
+        let dropTime = 0
+        let lastTime = 0
+
+        function update(time = 0) {
+            const deltaTime = time - lastTime
+            lastTime = time
+            dropTime += deltaTime
+            
+            if (dropTime > speed){
+                keyDownHandler({key: "ArrowDown"})
+                dropTime = 0
+            }
+
+            if (gameOver){
+                console.log("Game Over")
+                return
+            }
+            draw()
+            window.requestAnimationFrame(update)
+        }
+
+        function checkRows() {
+            for (let i = 0; i < board.length; i++) {
+                let total = 0
+                for (let j = 0; j < board[i].length; j++) {
+                    if (board[i][j]!=0)
+                        total++
+                }
+                if (total == BOARD_WIDTH){
+                    board.splice(i, 1)
+                    board.unshift(Array(BOARD_WIDTH).fill(0))
+                    score += (9+level)
+                    document.getElementById("score").innerHTML = score
+                    if (Math.floor(score/100) > level-1){
+                        level++
+                        document.getElementById("level").innerHTML = level
+                        speed = Math.floor(speed*0.9)
+                        console.log("speed= "+speed);
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            // draw background
+            ctx.fillStyle = "#222"
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+            ctx.beginPath()
+            ctx.strokeStyle = "#444"
+            ctx.setLineDash([4,16])
+            ctx.lineDashOffset = 12
+            for (let x = 1; x < BOARD_WIDTH; x+=2) {
+                ctx.moveTo(x*BLOCK_SIZE, 0)
+                ctx.lineTo(x*BLOCK_SIZE, canvas.height)
+            }
+            ctx.closePath()
+            ctx.stroke()
+            // draw board
+            board.forEach((row, y) => {
+                row.forEach((value, x) =>{
+                    if (value != 0){
+                        drawSquare(x*BLOCK_SIZE, y*BLOCK_SIZE, value)
+                    }
+                })
+            })
+            // draw block
+            block.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value==1){
+                        drawSquare((x + block.position.x)*BLOCK_SIZE, (y + block.position.y)*BLOCK_SIZE, block.color)
+                    }
+                })
+            })
+            // draw nextBlock
+            nextBlock.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value==1){
+                        ctx.fillStyle = `hsl(${nextBlock.color}, 100%, 50%)`
+                        ctx.fillRect(canvas.width-12+x*5, 2 + y*5,5,5)
+                    }
+                })
+            })
+
+        }
+
+       
+
+        
+        createBoard()
+        initEvents()
+        nextBlock = structuredClone(blocks[Math.floor(Math.random()*7)])
+        newBlock()
+        update()
+
+        function drawSquare(x, y, color) {
+            const shadow = 3
+            ctx.fillStyle = `hsl(${color}, 100%, 50%)`
+            ctx.fillRect(x+shadow, y+shadow,BLOCK_SIZE-4,BLOCK_SIZE-4)
+
+            ctx.beginPath()
+            ctx.fillStyle = `hsl(${color}, 100%, 75%)`
+            ctx.moveTo(x,y)
+            ctx.lineTo(x+BLOCK_SIZE,y)
+            ctx.lineTo(x+BLOCK_SIZE-shadow,y+shadow)
+            ctx.lineTo(x+shadow,y+shadow)
+            ctx.lineTo(x,y)
+            ctx.fill()
+            ctx.closePath()
+            
+            ctx.beginPath()
+            ctx.fillStyle = `hsl(${color}, 100%, 40%)`
+            ctx.moveTo(x,y)
+            ctx.lineTo(x,y+BLOCK_SIZE)
+            ctx.lineTo(x+shadow,y+BLOCK_SIZE-shadow)
+            ctx.lineTo(x+shadow,y+shadow)
+            ctx.lineTo(x,y)
+            ctx.fill()
+            ctx.closePath()
+            ctx.beginPath()
+            ctx.fillStyle = `hsl(${color}, 100%, 40%)`
+            ctx.moveTo(x+BLOCK_SIZE,y)
+            ctx.lineTo(x+BLOCK_SIZE,y+BLOCK_SIZE)
+            ctx.lineTo(x+BLOCK_SIZE-shadow,y+BLOCK_SIZE-shadow)
+            ctx.lineTo(x+BLOCK_SIZE-shadow,y+shadow)
+            ctx.lineTo(x+BLOCK_SIZE,y)
+            ctx.fill()
+            ctx.closePath()
+
+            ctx.beginPath()
+            ctx.fillStyle = `hsl(${color}, 100%, 25%)`
+            ctx.moveTo(x,y+BLOCK_SIZE)
+            ctx.lineTo(x+BLOCK_SIZE,y+BLOCK_SIZE)
+            ctx.lineTo(x+BLOCK_SIZE-shadow,y+BLOCK_SIZE-shadow)
+            ctx.lineTo(x+shadow,y+BLOCK_SIZE-shadow)
+            ctx.lineTo(x,y+BLOCK_SIZE)
+            ctx.fill()
+            ctx.closePath()
+        }
+
+        function rotate() {
+            const rotated = []
+            for (let i = 0; i < block.shape[0].length; i++) {
+                rotated.push([])
+                for (let j = 0; j < block.shape.length; j++) {
+                    rotated[i].push(block.shape[j][i])
+                }
+            }
+            if (rotated.length>1){
+                const aux = [...rotated[0]]
+                rotated[0] = [...rotated[rotated.length-1]]
+                rotated[rotated.length-1] = [...aux]
+            }
+            for (let i = 0; i <rotated.length; i++) 
+                for (let j = 0; j < rotated[i].length; j++){
+                    if ((block.position.y + i>=BOARD_HEIGHT) || (block.position.x + j>=BOARD_WIDTH)){
+                        return
+                    }
+                    else{
+                        if (rotated[i][j] == 1 && board[block.position.y + i][block.position.x + j] != 0)
+                            return
+                    }
+                }
+            block.shape = structuredClone(rotated)
+
+
+            // rotate downing block
+        }
+
+        function fixBlock() {
+            for (let i = 0; i < block.shape.length; i++) 
+                for (let j = 0; j < block.shape[i].length; j++){
+                    if (block.shape[i][j]!=0)
+                        board[block.position.y + i][block.position.x + j] = block.color 
+                }
+            newBlock()
+            checkRows()
+        }
+
+        function initEvents(params) {
+            document.addEventListener("keydown", keyDownHandler)
+        }
+
+        function keyDownHandler(e) {
+            if (e.key == "Right" || e.key == "ArrowRight"){
+                for (let i = 0; i < block.shape.length; i++) 
+                    for (let j = 0; j < block.shape[i].length; j++) 
+                        if (block.shape[i][j] == 1 && (board[block.position.y + i][block.position.x + j + 1] != 0))
+                            return
+             
+                block.position.x++
+            }
+            else if (e.key == "Left" || e.key == "ArrowLeft"){
+                for (let i = 0; i < block.shape.length; i++) 
+                    for (let j = 0; j < block.shape[i].length; j++) 
+                        if (block.shape[i][j] == 1 && (board[block.position.y + i][block.position.x + j - 1] != 0))
+                            return
+             
+                block.position.x--
+            }
+            else if (e.key == "Down" || e.key == "ArrowDown"){
+                for (let i = 0; i < block.shape.length; i++) 
+                    for (let j = 0; j < block.shape[i].length; j++) 
+                        if ((block.position.y + i + 1 == BOARD_HEIGHT) ||
+                            (block.shape[i][j] == 1 && 
+                            (board[block.position.y + i + 1][block.position.x + j] != 0 )))
+                            {
+                                fixBlock()
+                                return
+                            }
+                block.position.y++
+
+            }
+            else if (e.key == "Up" || e.key == "ArrowUp")
+                rotate()
+        }
+
+        // Board
+
+        function createBoard() {
+            for (let i = 0; i < BOARD_HEIGHT; i++) {
+                board.push([])
+                for (let j = 0; j < BOARD_WIDTH; j++) {
+                    board [i].push(0)                    
+                }                
+            }
+            board.pop()
+        }
+
+        
+
+    </script>
+</head>
+
+<body>
+    <div class="title">TETRIS</div>
+    <div class="header">
+        <div>
+            <span>Score: </span> <span id="score">0</span>
+        </div>
+        <div>
+            <span>Level: </span> <span id="level">1</span>
+        </div>
+    </div>
+    <canvas></canvas>
+</body>
+</html>
